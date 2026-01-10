@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "834664689370",
+    "project_id": "wicketlk-33a8c",
+    "storage_bucket": "wicketlk-33a8c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834664689370:android:43fd4a2fe5e102c2e33fe3",
+        "android_client_info": {
+          "package_name": "com.example.wicketlk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJh15l1f7xpYkNqwD-Qi1-3lfRhgqenCY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
