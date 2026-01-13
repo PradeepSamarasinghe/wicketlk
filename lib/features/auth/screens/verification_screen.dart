@@ -66,16 +66,34 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.verifyOtp(_code);
+      await authProvider.verifyOtp(_code, verificationId: widget.verificationId);
+
+      // Wait a moment for auth state to propagate
+      await Future.delayed(const Duration(milliseconds: 500));
 
       // Check if authentication was successful
-      if (authProvider.isAuthenticated) {
+      if (authProvider.isAuthenticated && authProvider.currentUser != null) {
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const CreateProfileScreen(),
             ),
           );
+        }
+      } else if (authProvider.isAuthenticated) {
+        // Firebase auth succeeded but Supabase user not loaded yet - wait more
+        await Future.delayed(const Duration(seconds: 1));
+        if (authProvider.currentUser != null && mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const CreateProfileScreen(),
+            ),
+          );
+        } else {
+          setState(() {
+            _errorMessage = 'Failed to load user data. Please try again.';
+            _isVerifying = false;
+          });
         }
       } else {
         setState(() {
@@ -84,8 +102,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
         });
       }
     } catch (e) {
+      debugPrint('Verification error: $e');
       setState(() {
-        _errorMessage = 'Invalid code. Please try again.';
+        _errorMessage = 'Invalid code: ${e.toString()}';
         _isVerifying = false;
       });
     }

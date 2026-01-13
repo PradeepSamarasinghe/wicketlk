@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
 
 class CreateProfileScreen extends StatefulWidget {
   const CreateProfileScreen({super.key});
@@ -15,6 +17,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   String _selectedRole = 'Batsman';
   String _selectedExperience = 'Beginner';
+  bool _isSubmitting = false;
 
   final List<String> _roles = [
     'Batsman',
@@ -36,6 +39,50 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     _emailController.dispose();
     _locationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final authProvider = context.read<AuthProvider>();
+      
+      await authProvider.updateProfile({
+        'name': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'location': _locationController.text.trim(),
+        'role': _selectedRole,
+        'experience': _selectedExperience,
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile created successfully!'),
+          backgroundColor: AppTheme.neonGreen,
+        ),
+      );
+
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/home',
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving profile: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -131,21 +178,17 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profile created successfully!'),
-                          backgroundColor: AppTheme.neonGreen,
-                        ),
-                      );
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                        '/home',
-                        (route) => false,
-                      );
-                    }
-                  },
-                  child: const Text('Complete Profile'),
+                  onPressed: _isSubmitting ? null : _submitProfile,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Complete Profile'),
                 ),
               ),
             ],
